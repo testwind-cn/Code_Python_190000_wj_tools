@@ -4,7 +4,7 @@ from wj_tools import sftp_config
 import paramiko
 import os
 import stat
-
+import pathlib
 
 # 获取连接
 def getConnect(host, port, username, password):
@@ -51,8 +51,9 @@ def download(handle, remotePath, localAbsDir):
     result = [1, ""]
     sftp = paramiko.SFTPClient.from_transport(handle)
     try:
-        remotePath = formatPath(remotePath)
-        localAbsDir = formatPath(localAbsDir)
+        # remotePath = formatPath(remotePath)
+        # localAbsDir = formatPath(localAbsDir)
+        # 上面两句不良代码，WJ删除
         remoteRel = ""
         if remotePath == "":
             remotePath = sftp_config.remoteDir
@@ -69,9 +70,12 @@ def download(handle, remotePath, localAbsDir):
         if stat.S_ISREG(sftp.stat(remoteRel).st_mode):  # isFile
             remoteRelPath = remoteRel
             fileName = os.path.basename(remoteRelPath)
-            localAbsPath = formatPath(localAbsDir, fileName)
-            lad = os.path.split(localAbsPath)[0]
-            lad = formatPath(lad)
+            # localAbsPath = formatPath(localAbsDir, fileName)
+            # lad = os.path.split(localAbsPath)[0]
+            # lad = formatPath(lad)
+            localAbsPath = str(pathlib.PurePath(localAbsDir).joinpath(fileName))
+            lad = pathlib.PurePath(localAbsDir).joinpath(fileName).parent
+            # 上面我修改的
             if not os.path.exists(lad):
                 os.makedirs(lad)
             sftp.get(remoteRelPath, localAbsPath)
