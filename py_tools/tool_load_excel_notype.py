@@ -7,13 +7,13 @@ import pathlib
 import datetime
 from hdfs.client import Client
 from impala.dbapi import connect
-from wj_tools.file_check import MyHdfsFile
-from wj_tools.hdfsclient import MyClient  # hdfs
+from py_tools.file_check import MyHdfsFile
+from py_tools.hdfsclient import MyClient  # hdfs
 # hive
 # data path config file
-from wj_tools.str_tool import StrTool
+from py_tools.str_tool import StrTool
 
-from wj_tools.tool_mysql import TheDB
+from py_tools.tool_mysql import TheDB
 
 # https://xlrd.readthedocs.io/en/latest/api.html?highlight=Cell#xlrd.sheet.Cell
 
@@ -273,9 +273,9 @@ class LoadExcel:
         table_name = table  # "allinpal_rpt.thbl_rpt_d0009"
 
         if len(the_date) > 0:
-            sql = 'LOAD DATA INPATH \'{}\' INTO TABLE {} PARTITION ( data_dt=\'{}\' )'.format(hdfs_file, table_name, the_date)
+            sql = 'LOAD DATA INPATH \'{}\' OVERWRITE INTO TABLE {} PARTITION ( data_dt=\'{}\' )'.format(hdfs_file, table_name, the_date)
         else:
-            sql = 'LOAD DATA INPATH \'{}\' INTO TABLE {} '.format(hdfs_file, table_name)
+            sql = 'LOAD DATA INPATH \'{}\' OVERWRITE INTO TABLE {} '.format(hdfs_file, table_name)
 
         if MyHdfsFile.isfile(a_client, hdfs_file):
             print("OK" + "  " + sql + "\n")

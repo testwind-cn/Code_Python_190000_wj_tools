@@ -7,13 +7,13 @@ import pathlib
 import datetime
 from hdfs.client import Client
 from impala.dbapi import connect
-from wj_tools.file_check import MyHdfsFile
-from wj_tools.hdfsclient import MyClient  # hdfs
+from py_tools.file_check import MyHdfsFile
+from py_tools.hdfsclient import MyClient  # hdfs
 # hive
 # data path config file
-from wj_tools.str_tool import StrTool
+from py_tools.str_tool import StrTool
 
-from wj_tools.tool_mysql import TheDB
+from py_tools.tool_mysql import TheDB
 
 # https://xlrd.readthedocs.io/en/latest/api.html?highlight=Cell#xlrd.sheet.Cell
 
@@ -75,6 +75,16 @@ class FileLoad:
         return
 
     def open_file(self, p_file_name1: str, p_first_row: int, p_total_col: int, p_ctl_col: int, p_data_type: list, p_data_pos: list = []):
+        """
+
+        :param p_file_name1:
+        :param p_first_row: p_first_row=4， 表示首行在第五行; p_first_row=0， 表示首行在第一行
+        :param p_total_col:
+        :param p_ctl_col: # 第2列是合计,就是 col==1
+        :param p_data_type:
+        :param p_data_pos:
+        :return:
+        """
         self.__p_local_file = p_file_name1
         self.__p_first_row = p_first_row
         self.__p_total_col = p_total_col
@@ -105,17 +115,20 @@ class FileLoad:
             style1 = xlwt.XFStyle()
             style1.num_format_str = 'yyyy-mm-dd'
 
-            while len(ctl_cell.strip()) > 0 and ctl_cell.strip() != u'合计':
+            while len("{}".format(ctl_cell).strip()) > 0 and "{}".format(ctl_cell).strip() != u'合计':
                 ctl_cell = "DATA"
                 ret_data_array = []
 
                 for col in range(0, self.__p_total_col):
-                    cell_value = sheet1.cell_value(cur_row + self.__p_first_row, col)
+                    try:
+                        cell_value = sheet1.cell_value(cur_row + self.__p_first_row, col)
+                    except Exception as e1:
+                        cell_value = ""
 
                     # 第2列是合计,就是 col==1
                     if col == self.__p_ctl_col:
                         ctl_cell = cell_value
-                        if len(ctl_cell.strip()) <= 0 or ctl_cell.strip() == u'合计':
+                        if len("{}".format(ctl_cell).strip()) <= 0 or "{}".format(ctl_cell).strip() == u'合计':
                             break
 
                     if self.__p_data_type[col] == 3:  # 日期
@@ -129,10 +142,11 @@ class FileLoad:
                     elif self.__p_data_type[col] == 1:  # 字符串
                         pass
 
+                    cell_value = "{}".format(cell_value)
                     cell_value.replace("\t", "    ")
                     ret_data_array.append(cell_value)
 
-                if len(ctl_cell.strip()) > 0 and ctl_cell.strip() != u'合计':
+                if len("{}".format(ctl_cell).strip()) > 0 and "{}".format(ctl_cell).strip() != u'合计':
                     yield ret_data_array
 
                 cur_row += 1
@@ -223,8 +237,9 @@ class FileLoad:
         today = datetime.datetime.strptime('1899-12-30', '%Y-%m-%d') + delta  # 将1899-12-30转化为可以计算的时间格式并加上要转化的日期戳
         return datetime.datetime.strftime(today, '%Y-%m-%d')  # 制定输出日期的格式
 
-    def LoadHive_Mysql(self, p_thedate, file_type: int, p_the_db: TheDB = None, p_table: str = "", p_sql: str = "", p_sql2: str = ""):
+    def LoadHive_Mysql(self, p_thedate, file_type: int, p_the_db: TheDB = None, p_table: str = "", p_sql: str = "", p_sql2: str = "", p_delete_hive=False):
         """
+
 
         :param p_thedate:
         :param file_type:  0 excel, 1 fix width text
@@ -232,6 +247,7 @@ class FileLoad:
         :param p_table:
         :param p_sql:
         :param p_sql2:
+        :param p_delete_hive:  是否删除HIVE表
         :return:
         """
         if self.__p_local_file is None or len(self.__p_local_file) == 0:
@@ -302,7 +318,7 @@ class FileLoad:
         if len(p_table)>0 and file_2 is not None:
             file_2.close()
             self.run_hdfs(local_file_2, p_thedate)
-            self.run_hive(local_file_2, p_thedate, table=p_table)
+            self.run_hive(local_file_2, p_thedate, table=p_table, delete_hive=p_delete_hive)
             try:
                 pathlib.Path(local_file_2).unlink()
                 # 删除 filename
@@ -334,7 +350,7 @@ class FileLoad:
         elif the_file['type'].lower() == 'file':  # 'directory'
             a_client.set_permission(hdfs_file, 777)
 
-    def run_hive(self, local_file: str, the_date: str, table: str):
+    def run_hive(self, local_file: str, the_date: str, table: str, delete_hive = False):
         a_client = Client("http://10.91.1.100:50070")  # "http://10.2.201.197:50070"
         conn = connect(host="10.91.1.100", port=10000, auth_mechanism="PLAIN", user="root")
         cur = conn.cursor()
@@ -346,11 +362,14 @@ class FileLoad:
         table_name = table  # "allinpal_rpt.thbl_rpt_d0009"
 
         if len(the_date) > 0:
-            sql = 'LOAD DATA INPATH \'{}\' INTO TABLE {} PARTITION ( data_dt=\'{}\' )'.format(hdfs_file, table_name, the_date)
+            sql = 'LOAD DATA INPATH \'{}\' OVERWRITE INTO TABLE {} PARTITION ( data_dt=\'{}\' )'.format(hdfs_file, table_name, the_date)
         else:
-            sql = 'LOAD DATA INPATH \'{}\' INTO TABLE {} '.format(hdfs_file, table_name)
+            sql = 'LOAD DATA INPATH \'{}\' OVERWRITE INTO TABLE {} '.format(hdfs_file, table_name)
 
         if MyHdfsFile.isfile(a_client, hdfs_file):
+            if delete_hive:
+                cur.execute('TRUNCATE TABLE {} '.format(table_name))
+                print("OK " + 'TRUNCATE TABLE {} '.format(table_name) + "\n")
             print("OK" + "  " + sql + "\n")
             cur.execute(sql)  # , async=True)
 

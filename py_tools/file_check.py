@@ -7,7 +7,7 @@ import pathlib
 import zipfile
 import csv
 # import platform
-from wj_tools.mylog import myLog
+from py_tools.mylog import myLog
 from hdfs.client import Client
 
 

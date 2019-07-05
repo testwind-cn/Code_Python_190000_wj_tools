@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# from wj_tools import sftp_config
-from wj_tools import sftpUtil
-from wj_tools.mylog import myLog
-from wj_tools.file_check import MyLocalFile
-from wj_tools.str_tool import StrTool
+# from py_tools import sftp_config
+from py_tools import sftpUtil
+from py_tools.mylog import myLog
+from py_tools.file_check import MyLocalFile
+from py_tools.str_tool import StrTool
 import paramiko
 import os,stat,shutil
 import time,datetime

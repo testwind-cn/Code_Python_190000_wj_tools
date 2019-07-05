@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from wj_tools import sftp_config
+from py_tools import sftp_config
 import paramiko
 import os
 import stat
