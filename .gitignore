@@ -9,6 +9,9 @@
 markdown*.xml
 markdown*/
 
+*/.idea/markdown*/*.*
+markdown-navigator/profiles_settings.xml
+
 # wangjun add
 
 
