@@ -1,4 +1,4 @@
-ï»¿# wangjun add
+# wangjun add
 
 .idea/dataSources/
 .idea/dictionaries/
@@ -15,7 +15,23 @@ __pycache__/
 
 .idea/workspace.xml
 
+# ÁÙÊ±ÎÄ¼ş
+note_tmp/
+data_tmp/
+data_tmp_out/
+# ÁÙÊ±ÎÄ¼ş
+
+# navicat Êı¾İ¿âÎÄ¼ş
+id_cache.*
+Premium/profiles/AutoSave/
+Premium/logs/
+Navicat/Premium/profiles/AutoSave/
+Navicat/Premium/logs/
+# navicat Êı¾İ¿âÎÄ¼ş
+
 # wangjun add
+wj_tools/.idea/dictionaries/
+py_tools/.idea/dictionaries/
 
 
 
