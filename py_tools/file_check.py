@@ -234,7 +234,13 @@ class MyLocalFile:
         print("ok")
 
     @staticmethod
-    def conv_file_local(from_file: str, to_file: str, need_first_line: bool = False, p_add_head: str = "", p_add_tail: str = ""):
+    def conv_file_local(from_file: str, to_file: str, need_first_line: bool = False, p_add_head: str = "", p_add_tail: str = "", quoting="\""):
+        """
+        \r\n
+        0D 0A
+        \r  CR carrige return
+        \n  NL line feed , new line
+        """
         if not os.path.isfile(from_file):
             return
         new_path = os.path.dirname(to_file)
@@ -247,14 +253,14 @@ class MyLocalFile:
         # data = '  '
         while len(data) > 0:
             if len(p_add_head) > 0:
-                data = "\"" + p_add_head + "\"," + data
+                data = quoting + p_add_head + quoting + "," + data
             if len(p_add_tail) > 0:
-                if data.endswith("\n\r"):
-                    data = data[0:len(data) - 2] + ",\"" + p_add_tail + "\"\n\r"
+                if data.endswith("\r\n"):
+                    data = data[0:len(data) - 2] + "," + quoting + p_add_tail + quoting + "\r\n"
                 elif data.endswith("\n"):
-                    data = data[0:len(data) - 1] + ",\"" + p_add_tail + "\"\n"
+                    data = data[0:len(data) - 1] + "," + quoting + p_add_tail + quoting + "\n"
                 else:
-                    data = data + ",\"" + p_add_tail + "\""
+                    data = data + "," + quoting + p_add_tail + quoting
             #       下面是Python 2.7 的处理方式
             #        code = chardet.detect(dd)['encoding']
             #        print(code)
